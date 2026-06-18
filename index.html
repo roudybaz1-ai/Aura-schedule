@@ -29,7 +29,7 @@
 
         .dashboard {
             width: 100%;
-            max-width: 950px;
+            max-width: 1100px;
             background: var(--card-bg);
             border-radius: 16px;
             padding: 16px;
@@ -131,7 +131,7 @@
             background: var(--bg-row);
             padding: 14px;
             border-radius: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
             border: 1px solid var(--border);
         }
 
@@ -183,28 +183,31 @@
 
         .grid-days {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 8px;
+            grid-template-columns: repeat(1, 1fr);
+            gap: 10px;
         }
 
-        @media (min-width: 480px) { .grid-days { grid-template-columns: repeat(3, 1fr); } }
-        @media (min-width: 768px) { .grid-days { grid-template-columns: repeat(7, 1fr); } }
+        @media (min-width: 480px) { .grid-days { grid-template-columns: repeat(2, 1fr); } }
+        @media (min-width: 768px) { .grid-days { grid-template-columns: repeat(4, 1fr); } }
+        @media (min-width: 1024px) { .grid-days { grid-template-columns: repeat(7, 1fr); } }
 
         .day-box {
             background: white;
-            padding: 8px;
+            padding: 10px;
             border-radius: 8px;
             border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 6px;
         }
 
         .day-label {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             color: #db2777;
             text-transform: uppercase;
+            border-bottom: 1px solid #fff1f2;
+            padding-bottom: 2px;
         }
 
         .time-input {
@@ -212,11 +215,45 @@
             background: #fff5f5;
             border: 1px solid var(--border);
             color: var(--text-main);
-            padding: 5px;
+            padding: 4px;
             border-radius: 4px;
             font-size: 12px;
-            height: 30px;
+            height: 28px;
         }
+
+        .deduct-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: #b91c1c;
+            font-weight: 600;
+        }
+
+        .input-deduct {
+            width: 45px;
+            height: 24px;
+            padding: 2px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 11px;
+            text-align: center;
+            background: #fef2f2;
+            color: #b91c1c;
+        }
+
+        .note-input {
+            width: 100%;
+            height: 40px;
+            resize: none;
+            font-size: 11px;
+            padding: 4px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: #fafafa;
+            color: var(--text-main);
+        }
+        .note-input:focus { background: white; outline: 1px solid var(--accent); }
 
         .off-checkbox {
             display: flex;
@@ -225,8 +262,8 @@
             font-size: 11px;
             color: var(--text-dim);
             cursor: pointer;
-            margin-top: 4px;
             user-select: none;
+            margin-top: 2px;
         }
 
         .is-off { opacity: 0.4; background: #f3f4f6; }
@@ -435,13 +472,21 @@
             document.getElementById('week-label').innerText = `📅 ${currentMonday.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} - ${endOfWeek.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}`;
         }
 
-        function calculateHours(fromStr, toStr, isOff) {
+        function calculateHours(fromStr, toStr, isOff, breakMins) {
             if (isOff || !fromStr || !toStr) return 0;
             const [fromH, fromM] = fromStr.split(':').map(Number);
             const [toH, toM] = toStr.split(':').map(Number);
             let diffMs = (new Date(2000, 0, 1, toH, toM)) - (new Date(2000, 0, 1, fromH, fromM));
             if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000;
-            return parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+            
+            let totalHours = diffMs / (1000 * 60 * 60);
+            
+            // Subtract extra break minutes converted into hours
+            if (breakMins && !isNaN(breakMins)) {
+                totalHours -= (Number(breakMins) / 60);
+            }
+            
+            return parseFloat(Math.max(0, totalHours).toFixed(2));
         }
 
         function getHoursForExactDate(employeeName, targetDate) {
@@ -456,7 +501,7 @@
 
             const dayData = savedData[`${employeeName}_${dayName}`];
             if (!dayData) return 0;
-            return calculateHours(dayData.from, dayData.to, dayData.off);
+            return calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
         }
 
         function getMonthHours(employeeName) {
@@ -476,7 +521,7 @@
                             const dayKey = `${employeeName}_${day}`;
                             const dayData = savedData[dayKey];
                             if (dayData) {
-                                totalMonthHours += calculateHours(dayData.from, dayData.to, dayData.off);
+                                totalMonthHours += calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
                             }
                         });
                     }
@@ -560,12 +605,16 @@
                     const fromEl = document.getElementById(`from_${dayKey}`);
                     const toEl = document.getElementById(`to_${dayKey}`);
                     const offEl = document.getElementById(`off_${dayKey}`);
+                    const breakEl = document.getElementById(`break_${dayKey}`);
+                    const noteEl = document.getElementById(`note_${dayKey}`);
                     
                     if (fromEl && toEl && offEl) {
                         dataToSave[dayKey] = {
                             from: fromEl.value,
                             to: toEl.value,
-                            off: offEl.checked
+                            off: offEl.checked,
+                            breakMins: breakEl ? breakEl.value : "0",
+                            notes: noteEl ? noteEl.value : ""
                         };
                     }
                 });
@@ -573,10 +622,9 @@
 
             localStorage.setItem(currentWeekKey, JSON.stringify(dataToSave));
             
-            // Show custom temporary auto-save message fluidly
             const statusLabel = document.getElementById('save-status');
             statusLabel.style.display = 'inline';
-            setTimeout(() => { statusLabel.style.display = 'none'; }, 1000);
+            setTimeout(() => { statusLabel.style.display = 'none'; }, 800);
         }
 
         function updateLiveHours(emp) {
@@ -586,13 +634,13 @@
                 const offChecked = document.getElementById(`off_${dayKey}`).checked;
                 const fromVal = document.getElementById(`from_${dayKey}`).value;
                 const toVal = document.getElementById(`to_${dayKey}`).value;
-                weeklyTotal += calculateHours(fromVal, toVal, offChecked);
+                const breakVal = document.getElementById(`break_${dayKey}`).value;
+                weeklyTotal += calculateHours(fromVal, toVal, offChecked, breakVal);
             });
             document.getElementById(`weekly_total_${emp}`).innerText = weeklyTotal.toFixed(1);
             
             saveStateAutomatically();
             
-            // Update monthly numbers instantly on change
             const monthTotal = getMonthHours(emp);
             document.getElementById(`monthly_total_${emp}`).innerText = monthTotal.toFixed(1);
             
@@ -619,10 +667,10 @@
                 days.forEach(day => {
                     const dayKey = `${emp}_${day}`;
                     if (!savedData[dayKey]) {
-                        savedData[dayKey] = { from: "15:00", to: "01:00", off: false };
+                        savedData[dayKey] = { from: "15:00", to: "01:00", off: false, breakMins: "0", notes: "" };
                     }
                     const dayData = savedData[dayKey];
-                    weeklyTotalInitial += calculateHours(dayData.from, dayData.to, dayData.off);
+                    weeklyTotalInitial += calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
                 });
 
                 const monthTotal = getMonthHours(emp);
@@ -656,6 +704,15 @@
                         <div class="day-label">${day}</div>
                         <input type="time" class="time-input" id="from_${dayKey}" value="${dayData.from}" ${dayData.off ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
                         <input type="time" class="time-input" id="to_${dayKey}" value="${dayData.to}" ${dayData.off ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
+                        
+                        <div class="deduct-container">
+                            <span>Break:</span>
+                            <input type="number" class="input-deduct" id="break_${dayKey}" value="${dayData.breakMins || 0}" min="0" step="5" ${dayData.off ? 'disabled' : ''} oninput="updateLiveHours('${emp}')">
+                            <span>min</span>
+                        </div>
+
+                        <textarea class="note-input" id="note_${dayKey}" placeholder="Add note..." oninput="saveStateAutomatically()">${dayData.notes || ""}</textarea>
+
                         <label class="off-checkbox">
                             <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} onchange="toggleOff('${dayKey}', '${emp}')"> Day Off
                         </label>
@@ -675,15 +732,18 @@
             const dayBox = document.getElementById(`box_${dayKey}`);
             const fromInput = document.getElementById(`from_${dayKey}`);
             const toInput = document.getElementById(`to_${dayKey}`);
+            const breakInput = document.getElementById(`break_${dayKey}`);
 
             if (isChecked) {
                 dayBox.classList.add('is-off');
                 fromInput.disabled = true;
                 toInput.disabled = true;
+                breakInput.disabled = true;
             } else {
                 dayBox.classList.remove('is-off');
                 fromInput.disabled = false;
                 toInput.disabled = false;
+                breakInput.disabled = false;
             }
             updateLiveHours(emp);
         }
