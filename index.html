@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Board Games | Schedule Manager</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #10b981;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 800px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        h1 { margin: 0; font-size: 24px; color: var(--accent); }
+        h2 { margin: 0; font-size: 18px; color: var(--text-main); }
+
+        .nav-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        button {
+            background: var(--border);
+            color: var(--text-main);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        button:hover { background: #475569; }
+        .btn-save { background: var(--accent); color: white; }
+        .btn-save:hover { background: #059669; }
+
+        .week-display {
+            font-weight: bold;
+            color: var(--text-main);
+            background: #0f172a;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        .employee-row {
+            background: #151f32;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .employee-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            color: var(--accent);
+            text-align: left;
+        }
+
+        .grid-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .grid-days { grid-template-columns: repeat(1, 1fr); }
+        }
+
+        .day-box {
+            background: var(--card-bg);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .day-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .time-input {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            color: white;
+            padding: 4px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .off-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 11px;
+            color: var(--text-dim);
+            cursor: pointer;
+            margin-top: 2px;
+        }
+
+        .is-off {
+            opacity: 0.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="header">
+            <div>
+                <h1>Aura Board Games</h1>
+                <p style="margin: 4px 0 0 0; color: var(--text-dim); font-size: 14px;">Weekly Schedule Manager</p>
+            </div>
+            <button class="btn-save" onclick="saveSchedule()">Save Schedule</button>
+        </div>
+
+        <!-- History/Navigation Controls -->
+        <div class="header" style="border: none; padding: 0; margin-bottom: 25px;">
+            <div class="nav-controls">
+                <button onclick="changeWeek(-4)">⏮ Month</button>
+                <button onclick="changeWeek(-1)">◀ Week</button>
+            </div>
+            <div class="week-display" id="week-label">Week of: Loading...</div>
+            <div class="nav-controls">
+                <button onclick="changeWeek(1)">Week ▶</button>
+                <button onclick="changeWeek(4)">Month ⏭</button>
+            </div>
+        </div>
+
+        <!-- Schedule Container -->
+        <div id="schedule-container"></div>
+    </div>
+
+    <script>
+        // Edit this array to add/remove your context employees!
+        const employees = ["Sarah", "Alex", "John", "Maria", "Rayan"]; 
+        const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        
+        let currentMonday = getMonday(new Date());
+
+        function getMonday(d) {
+            d = new Date(d);
+            let day = d.getDay(),
+                diff = d.getDate() - day + (day == 0 ? -6 : 1); 
+            return new Date(d.setDate(diff));
+        }
+
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function getWeekKey() {
+            return `schedule_${formatDate(currentMonday)}`;
+        }
+
+        function updateWeekLabel() {
+            const endOfWeek = new Date(currentMonday);
+            endOfWeek.setDate(endOfWeek.getDate() + 6);
+            document.getElementById('week-label').innerText = `📅 ${currentMonday.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} - ${endOfWeek.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}`;
+        }
+
+        function renderSchedule() {
+            updateWeekLabel();
+            const container = document.getElementById('schedule-container');
+            container.innerHTML = '';
+
+            // Load saved data for this specific week key
+            const savedData = JSON.parse(localStorage.getItem(getWeekKey())) || {};
+
+            employees.forEach(emp => {
+                const empRow = document.createElement('div');
+                empRow.className = 'employee-row';
+                
+                const nameDiv = document.createElement('div');
+                nameDiv.className = 'employee-name';
+                nameDiv.innerText = emp;
+                empRow.appendChild(nameDiv);
+
+                const grid = document.createElement('div');
+                grid.className = 'grid-days';
+
+                days.forEach(day => {
+                    const dayKey = `${emp}_${day}`;
+                    const dayData = savedData[dayKey] || { from: "09:00", to: "17:00", off: false };
+
+                    const dayBox = document.createElement('div');
+                    dayBox.className = `day-box ${dayData.off ? 'is-off' : ''}`;
+                    dayBox.id = `box_${dayKey}`;
+
+                    dayBox.innerHTML = `
+                        <div class="day-label">${day}</div>
+                        <input type="time" class="time-input" id="from_${dayKey}" value="${dayData.from}" ${dayData.off ? 'disabled' : ''}>
+                        <input type="time" class="time-input" id="to_${dayKey}" value="${dayData.to}" ${dayData.off ? 'disabled' : ''}>
+                        <label class="off-checkbox">
+                            <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} onchange="toggleOff('${dayKey}')"> Day Off
+                        </label>
+                    `;
+                    grid.appendChild(dayBox);
+                });
+
+                empRow.appendChild(grid);
+                container.appendChild(empRow);
+            });
+        }
+
+        function toggleOff(dayKey) {
+            const isChecked = document.getElementById(`off_${dayKey}`).checked;
+            const dayBox = document.getElementById(`box_${dayKey}`);
+            const fromInput = document.getElementById(`from_${dayKey}`);
+            const toInput = document.getElementById(`to_${dayKey}`);
+
+            if (isChecked) {
+                dayBox.classList.add('is-off');
+                fromInput.disabled = true;
+                toInput.disabled = true;
+            } else {
+                dayBox.classList.remove('is-off');
+                fromInput.disabled = false;
+                toInput.disabled = false;
+            }
+        }
+
+        function saveSchedule() {
+            const dataToSave = {};
+            employees.forEach(emp => {
+                days.forEach(day => {
+                    const dayKey = `${emp}_${day}`;
+                    dataToSave[dayKey] = {
+                        from: document.getElementById(`from_${dayKey}`).value,
+                        to: document.getElementById(`to_${dayKey}`).value,
+                        off: document.getElementById(`off_${dayKey}`).checked
+                    };
+                });
+            });
+            localStorage.setItem(getWeekKey(), JSON.stringify(dataToSave));
+            alert("Schedule saved successfully for this week!");
+        }
+
+        function changeWeek(weeks) {
+            currentMonday.setDate(currentMonday.getDate() + (weeks * 7));
+            renderSchedule();
+        }
+
+        // Initialize App
+        renderSchedule();
+    </script>
+</body>
+</html>
