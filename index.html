@@ -29,7 +29,7 @@
             min-height: 100vh;
         }
 
-        /* Login Screen Styles */
+        /* Login Screen */
         .login-screen {
             width: 100%;
             max-width: 380px;
@@ -45,11 +45,11 @@
         .login-group { margin-bottom: 16px; text-align: left; }
         .login-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #9d174d; font-size: 14px; }
         .login-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; color: var(--text-main); }
-        .login-btn { width: 100%; padding: 10px; background: var(--accent); border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .login-btn { width: 100%; padding: 10px; background: var(--accent); border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; }
         .login-btn:hover { background: var(--accent-hover); }
         .error-msg { color: #ef4444; font-size: 13px; font-weight: bold; margin-bottom: 12px; display: none; }
 
-        /* Main Dashboard Screen */
+        /* Main Dashboard */
         .dashboard {
             display: none;
             width: 100%;
@@ -99,7 +99,6 @@
             cursor: pointer;
             font-weight: 600;
             font-size: 13px;
-            transition: background 0.2s;
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -184,18 +183,16 @@
         @media (min-width: 1024px) { .grid-days { grid-template-columns: repeat(7, 1fr); } }
 
         .day-box { background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
-
         .day-label { font-size: 12px; font-weight: bold; color: #db2777; text-transform: uppercase; border-bottom: 1px solid #fff1f2; padding-bottom: 2px; }
+        .date-sub-label { font-size: 10px; color: var(--text-dim); margin-top: -4px; margin-bottom: 2px; }
 
         .time-input { width: 100%; background: #fff5f5; border: 1px solid var(--border); color: var(--text-main); padding: 4px; border-radius: 4px; font-size: 12px; height: 28px; }
         .time-input:disabled, .input-deduct:disabled, .note-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
 
         .deduct-container { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #b91c1c; font-weight: 600; }
-
         .input-deduct { width: 45px; height: 24px; padding: 2px; border: 1px solid var(--border); border-radius: 4px; font-size: 11px; text-align: center; background: #fef2f2; color: #b91c1c; }
 
         .note-input { width: 100%; height: 40px; resize: none; font-size: 11px; padding: 4px; border: 1px solid var(--border); border-radius: 4px; background: #fafafa; color: var(--text-main); }
-
         .off-checkbox { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-dim); cursor: pointer; user-select: none; margin-top: 2px; }
 
         .is-off { opacity: 0.4; background: #f3f4f6; }
@@ -205,11 +202,11 @@
         .settings-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #9d174d; font-size: 14px;}
 
         .input-text { padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%; max-width: 240px; margin-bottom: 8px; display: block; }
-
         .worker-list-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border: 1px solid var(--border); max-width: 450px; flex-wrap: wrap; gap: 6px; }
         .pass-change-container { display: flex; gap: 4px; align-items: center; width: 100%; border-top: 1px dashed #fbcfe8; padding-top: 6px; margin-top: 4px; }
         .input-mini-pass { padding: 4px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; width: 110px; }
 
+        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; padding: 10px; }
         .modal-content { background: white; padding: 16px; border-radius: 16px; width: 100%; max-width: 440px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #9d174d; }
@@ -318,11 +315,22 @@
 
         function getMonday(d) {
             d = new Date(d);
-            let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1); 
-            return new Date(d.setDate(diff));
+            let day = d.getDay();
+            let diff = d.getDate() - day + (day == 0 ? -6 : 1); 
+            let monday = new Date(d.setDate(diff));
+            monday.setHours(0,0,0,0);
+            return monday;
         }
 
-        function formatDate(date) { return date.toISOString().split('T')[0]; }
+        function formatDateString(date) { 
+            let d = new Date(date),
+                month = '' + (d.getMonth() + 1),
+                day = '' + d.getDate(),
+                year = d.getFullYear();
+            if (month.length < 2) month = '0' + month;
+            if (day.length < 2) day = '0' + day;
+            return [year, month, day].join('-');
+        }
 
         function updateWeekLabel() {
             const endOfWeek = new Date(currentMonday);
@@ -359,7 +367,6 @@
                 document.getElementById('admin-settings-btn').style.display = isAdmin ? 'inline-flex' : 'none';
 
                 document.getElementById('login-passkey').value = "";
-
                 renderSchedule();
             } else {
                 document.getElementById('login-error').style.display = 'block';
@@ -387,20 +394,28 @@
             return parseFloat(Math.max(0, totalHours).toFixed(2));
         }
 
-        function getHoursForExactDate(employeeName, targetDate) {
-            const tempMon = getMonday(targetDate);
-            const weekKey = `schedule_${formatDate(tempMon)}`;
-            const savedData = JSON.parse(localStorage.getItem(weekKey));
-            if (!savedData) return 0;
+        function getDayData(employeeName, dateStr) {
+            const globalKey = `auradata_${employeeName}_${dateStr}`;
+            const saved = localStorage.getItem(globalKey);
+            if (saved) return JSON.parse(saved);
+            return { from: "15:00", to: "01:00", off: false, breakMins: "0", notes: "" };
+        }
 
-            // Strict target day evaluation fixing overnight hour spillover
-            const dayNamesLookup = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-            const targetDayIndex = targetDate.getDay(); 
-            const targetDayString = dayNamesLookup[targetDayIndex];
+        function saveDayData(employeeName, dateStr, data) {
+            const globalKey = `auradata_${employeeName}_${dateStr}`;
+            localStorage.setItem(globalKey, JSON.stringify(data));
+        }
 
-            const dayData = savedData[`${employeeName}_${targetDayString}`];
-            if (!dayData) return 0;
-            return calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
+        function getWeeklyTotal(employeeName, startMonday) {
+            let total = 0;
+            let tempDate = new Date(startMonday);
+            for(let i=0; i<7; i++) {
+                let dStr = formatDateString(tempDate);
+                let dayData = getDayData(employeeName, dStr);
+                total += calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
+                tempDate.setDate(tempDate.getDate() + 1);
+            }
+            return total;
         }
 
         function getMonthHours(employeeName) {
@@ -408,26 +423,12 @@
             const targetMonth = currentMonday.getMonth();
             const targetYear = currentMonday.getFullYear();
 
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith("schedule_")) {
-                    const dateStr = key.replace("schedule_", "");
-                    const keyDate = new Date(dateStr);
-                    
-                    const savedData = JSON.parse(localStorage.getItem(key)) || {};
-                    days.forEach((day, idx) => {
-                        const dayOffset = new Date(keyDate);
-                        dayOffset.setDate(dayOffset.getDate() + idx);
-                        
-                        // Keeps hours locked to the starting shift calendar date regardless of late finishes
-                        if (dayOffset.getMonth() === targetMonth && dayOffset.getFullYear() === targetYear) {
-                            const dayData = savedData[`${employeeName}_${day}`];
-                            if (dayData) {
-                                totalMonthHours += calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
-                            }
-                        }
-                    });
-                }
+            const totalDaysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+            for (let d = 1; d <= totalDaysInMonth; d++) {
+                let evalDate = new Date(targetYear, targetMonth, d);
+                let dStr = formatDateString(evalDate);
+                let dayData = getDayData(employeeName, dStr);
+                totalMonthHours += calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
             }
             return totalMonthHours;
         }
@@ -454,8 +455,8 @@
             const firstDayOfMonth = new Date(currentYear, currentMonthIndex, 1);
             const lastDayOfMonth = new Date(currentYear, currentMonthIndex + 1, 0);
             
-            let startDayOffset = firstDayOfMonth.getDay() - 1;
-            if (startDayOffset < 0) startDayOffset = 6;
+            let startDayOffset = firstDayOfMonth.getDay() - 1; 
+            if (startDayOffset < 0) startDayOffset = 6; 
 
             for (let i = 0; i < startDayOffset; i++) {
                 const emptyCell = document.createElement('div');
@@ -466,7 +467,10 @@
             const totalDays = lastDayOfMonth.getDate();
             for (let dayNum = 1; dayNum <= totalDays; dayNum++) {
                 const evalDate = new Date(currentYear, currentMonthIndex, dayNum);
-                const dayHours = getHoursForExactDate(emp, evalDate);
+                const dStr = formatDateString(evalDate);
+                const dayData = getDayData(emp, dStr);
+                const dayHours = calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
+
                 const cell = document.createElement('div');
                 cell.className = 'calendar-cell';
                 let hourTagHtml = dayHours > 0 ? `<div class="cell-hrs">${dayHours}h</div>` : '';
@@ -479,58 +483,55 @@
         function closeModal() { document.getElementById('calendar-modal').style.display = 'none'; }
         window.onclick = function(event) { if (event.target == document.getElementById('calendar-modal')) { closeModal(); } }
 
-        function saveStateAutomatically() {
-            if (!isAdmin) return; 
-            const currentWeekKey = `schedule_${formatDate(currentMonday)}`;
-            const dataToSave = JSON.parse(localStorage.getItem(currentWeekKey)) || {};
-            
-            employees.forEach(emp => {
-                days.forEach(day => {
-                    const dayKey = `${emp}_${day}`;
-                    const fromEl = document.getElementById(`from_${dayKey}`);
-                    const toEl = document.getElementById(`to_${dayKey}`);
-                    const offEl = document.getElementById(`off_${dayKey}`);
-                    const breakEl = document.getElementById(`break_${dayKey}`);
-                    const noteEl = document.getElementById(`note_${dayKey}`);
-                    
-                    if (fromEl && toEl && offEl) {
-                        dataToSave[dayKey] = {
-                            from: fromEl.value,
-                            to: toEl.value,
-                            off: offEl.checked,
-                            breakMins: breakEl ? breakEl.value : "0",
-                            notes: noteEl ? noteEl.value : ""
-                        };
-                    }
-                });
-            });
+        function handleLiveChange(emp, dateStr) {
+            if (!isAdmin) return;
 
-            localStorage.setItem(currentWeekKey, JSON.stringify(dataToSave));
-            const statusLabel = document.getElementById('save-status');
-            statusLabel.style.display = 'inline';
-            setTimeout(() => { statusLabel.style.display = 'none'; }, 800);
-        }
+            const fromVal = document.getElementById(`from_${emp}_${dateStr}`).value;
+            const toVal = document.getElementById(`to_${emp}_${dateStr}`).value;
+            const offChecked = document.getElementById(`off_${emp}_${dateStr}`).checked;
+            const breakVal = document.getElementById(`break_${emp}_${dateStr}`).value;
+            const noteVal = document.getElementById(`note_${emp}_${dateStr}`).value;
 
-        function updateLiveHours(emp) {
-            let weeklyTotal = 0;
-            days.forEach(day => {
-                const dayKey = `${emp}_${day}`;
-                const offChecked = document.getElementById(`off_${dayKey}`).checked;
-                const fromVal = document.getElementById(`from_${dayKey}`).value;
-                const toVal = document.getElementById(`to_${dayKey}`).value;
-                const breakVal = document.getElementById(`break_${dayKey}`).value;
-                weeklyTotal += calculateHours(fromVal, toVal, offChecked, breakVal);
-            });
-            document.getElementById(`weekly_total_${emp}`).innerText = weeklyTotal.toFixed(1);
-            
-            saveStateAutomatically();
-            
+            const updatedData = {
+                from: fromVal,
+                to: toVal,
+                off: offChecked,
+                breakMins: breakVal,
+                notes: noteVal
+            };
+
+            saveDayData(emp, dateStr, updatedData);
+
+            // Update DOM states immediately
+            const dayBox = document.getElementById(`box_${emp}_${dateStr}`);
+            const fromInput = document.getElementById(`from_${emp}_${dateStr}`);
+            const toInput = document.getElementById(`to_${emp}_${dateStr}`);
+            const breakInput = document.getElementById(`break_${emp}_${dateStr}`);
+
+            if (offChecked) {
+                dayBox.classList.add('is-off');
+                fromInput.disabled = true; toInput.disabled = true; breakInput.disabled = true;
+            } else {
+                dayBox.classList.remove('is-off');
+                fromInput.disabled = false; toInput.disabled = false; breakInput.disabled = false;
+            }
+
+            // Recalculate Badges
+            const newWeekTotal = getWeeklyTotal(emp, currentMonday);
+            document.getElementById(`weekly_total_${emp}`).innerText = newWeekTotal.toFixed(1);
+
             const monthTotal = getMonthHours(emp);
             document.getElementById(`monthly_total_${emp}`).innerText = monthTotal.toFixed(1);
+            
             const extraTime = monthTotal - minMonthlyHours;
             const bankEl = document.getElementById(`bank_total_${emp}`);
             bankEl.innerText = (extraTime >= 0 ? '+' : '') + extraTime.toFixed(1);
             bankEl.className = extraTime >= 0 ? 'overtime-pos' : 'overtime-neg';
+
+            // Auto save visual confirmation
+            const statusLabel = document.getElementById('save-status');
+            statusLabel.style.display = 'inline';
+            setTimeout(() => { statusLabel.style.display = 'none'; }, 800);
         }
 
         function renderSchedule() {
@@ -539,25 +540,13 @@
             const container = document.getElementById('schedule-container');
             container.innerHTML = '';
 
-            const currentWeekKey = `schedule_${formatDate(currentMonday)}`;
-            const savedData = JSON.parse(localStorage.getItem(currentWeekKey)) || {};
-
             employees.forEach(emp => {
                 if (!isAdmin && emp !== currentUser) return;
 
                 const empRow = document.createElement('div');
                 empRow.className = 'employee-row';
                 
-                let weeklyTotalInitial = 0;
-                days.forEach(day => {
-                    const dayKey = `${emp}_${day}`;
-                    if (!savedData[dayKey]) {
-                        savedData[dayKey] = { from: "15:00", to: "01:00", off: false, breakMins: "0", notes: "" };
-                    }
-                    const dayData = savedData[dayKey];
-                    weeklyTotalInitial += calculateHours(dayData.from, dayData.to, dayData.off, dayData.breakMins);
-                });
-
+                const weeklyTotalInitial = getWeeklyTotal(emp, currentMonday);
                 const monthTotal = getMonthHours(emp);
                 const extraTime = monthTotal - minMonthlyHours;
                 const overtimeClass = extraTime >= 0 ? 'overtime-pos' : 'overtime-neg';
@@ -577,32 +566,37 @@
                 const grid = document.createElement('div');
                 grid.className = 'grid-days';
 
-                days.forEach(day => {
-                    const dayKey = `${emp}_${day}`;
-                    const dayData = savedData[dayKey];
+                let tempDate = new Date(currentMonday);
+
+                days.forEach(dayName => {
+                    let dStr = formatDateString(tempDate);
+                    let dayData = getDayData(emp, dStr);
+                    let displayDateNum = tempDate.getDate();
 
                     const dayBox = document.createElement('div');
                     dayBox.className = `day-box ${dayData.off ? 'is-off' : ''}`;
-                    dayBox.id = `box_${dayKey}`;
+                    dayBox.id = `box_${emp}_${dStr}`;
 
                     dayBox.innerHTML = `
-                        <div class="day-label">${day}</div>
-                        <input type="time" class="time-input" id="from_${dayKey}" value="${dayData.from}" ${dayData.off || !isAdmin ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
-                        <input type="time" class="time-input" id="to_${dayKey}" value="${dayData.to}" ${dayData.off || !isAdmin ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
+                        <div class="day-label">${dayName}</div>
+                        <div class="date-sub-label">Day ${displayDateNum}</div>
+                        <input type="time" class="time-input" id="from_${emp}_${dStr}" value="${dayData.from}" ${dayData.off || !isAdmin ? 'disabled' : ''} onchange="handleLiveChange('${emp}', '${dStr}')">
+                        <input type="time" class="time-input" id="to_${emp}_${dStr}" value="${dayData.to}" ${dayData.off || !isAdmin ? 'disabled' : ''} onchange="handleLiveChange('${emp}', '${dStr}')">
                         
                         <div class="deduct-container">
                             <span>Break:</span>
-                            <input type="number" class="input-deduct" id="break_${dayKey}" value="${dayData.breakMins || 0}" min="0" step="5" ${dayData.off || !isAdmin ? 'disabled' : ''} oninput="updateLiveHours('${emp}')">
+                            <input type="number" class="input-deduct" id="break_${emp}_${dStr}" value="${dayData.breakMins || 0}" min="0" step="5" ${dayData.off || !isAdmin ? 'disabled' : ''} oninput="handleLiveChange('${emp}', '${dStr}')">
                             <span>min</span>
                         </div>
 
-                        <textarea class="note-input" id="note_${dayKey}" placeholder="No notes..." ${!isAdmin ? 'disabled' : ''} oninput="saveStateAutomatically()">${dayData.notes || ""}</textarea>
+                        <textarea class="note-input" id="note_${emp}_${dStr}" placeholder="No notes..." ${!isAdmin ? 'disabled' : ''} oninput="handleLiveChange('${emp}', '${dStr}')">${dayData.notes || ""}</textarea>
 
                         <label class="off-checkbox">
-                            <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} ${!isAdmin ? 'disabled' : ''} onchange="toggleOff('${dayKey}', '${emp}')"> Day Off
+                            <input type="checkbox" id="off_${emp}_${dStr}" ${dayData.off ? 'checked' : ''} ${!isAdmin ? 'disabled' : ''} onchange="handleLiveChange('${emp}', '${dStr}')"> Day Off
                         </label>
                     `;
                     grid.appendChild(dayBox);
+                    tempDate.setDate(tempDate.getDate() + 1);
                 });
 
                 empRow.appendChild(grid);
@@ -610,24 +604,6 @@
             });
 
             renderSettingsWorkerList();
-        }
-
-        function toggleOff(dayKey, emp) {
-            if (!isAdmin) return;
-            const isChecked = document.getElementById(`off_${dayKey}`).checked;
-            const dayBox = document.getElementById(`box_${dayKey}`);
-            const fromInput = document.getElementById(`from_${dayKey}`);
-            const toInput = document.getElementById(`to_${dayKey}`);
-            const breakInput = document.getElementById(`break_${dayKey}`);
-
-            if (isChecked) {
-                dayBox.classList.add('is-off');
-                fromInput.disabled = true; toInput.disabled = true; breakInput.disabled = true;
-            } else {
-                dayBox.classList.remove('is-off');
-                fromInput.disabled = false; toInput.disabled = false; breakInput.disabled = false;
-            }
-            updateLiveHours(emp);
         }
 
         function changeWeek(weeks) {
