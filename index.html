@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aura Board Games | Schedule Manager</title>
+    <title>Aura Board Games | Secure Schedule Manager</title>
     <style>
         :root {
             --bg-dark: #fdf2f8;
@@ -25,9 +25,33 @@
             padding: 12px;
             display: flex;
             justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
+        /* Login Screen Styles */
+        .login-screen {
+            width: 100%;
+            max-width: 380px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(236, 72, 153, 0.15);
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .login-screen h2 { margin-top: 0; color: var(--accent); }
+        .login-group { margin-bottom: 16px; text-align: left; }
+        .login-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #9d174d; font-size: 14px; }
+        .login-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+        .login-btn { width: 100%; padding: 10px; background: var(--accent); border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+        .login-btn:hover { background: var(--accent-hover); }
+        .error-msg { color: #ef4444; font-size: 13px; font-weight: bold; margin-bottom: 12px; display: none; }
+
+        /* Main Dashboard Screen */
         .dashboard {
+            display: none;
             width: 100%;
             max-width: 1100px;
             background: var(--card-bg);
@@ -35,6 +59,7 @@
             padding: 16px;
             box-shadow: 0 10px 25px rgba(236, 72, 153, 0.15);
             border: 1px solid var(--border);
+            align-self: flex-start;
         }
 
         .header {
@@ -47,11 +72,7 @@
         }
 
         @media (min-width: 600px) {
-            .header {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
+            .header { flex-direction: row; justify-content: space-between; align-items: center; }
             body { padding: 20px; }
             .dashboard { padding: 24px; }
         }
@@ -64,11 +85,10 @@
             align-items: center;
             width: 100%;
             justify-content: space-between;
+            flex-wrap: wrap;
         }
 
-        @media (min-width: 600px) {
-            .nav-controls { width: auto; }
-        }
+        @media (min-width: 600px) { .nav-controls { width: auto; } }
 
         button {
             background: #f472b6;
@@ -87,6 +107,8 @@
 
         button:hover { background: var(--accent-hover); }
         .btn-settings { background: #9d174d; }
+        .btn-logout { background: #4b5563; }
+        .btn-logout:hover { background: #374151; }
 
         .week-nav-bar {
             display: flex;
@@ -100,19 +122,10 @@
             border: 1px solid var(--border);
         }
 
-        .week-btn-group {
-            display: flex;
-            gap: 6px;
-            width: 100%;
-            justify-content: space-between;
-        }
+        .week-btn-group { display: flex; gap: 6px; width: 100%; justify-content: space-between; }
 
         @media (min-width: 600px) {
-            .week-nav-bar {
-                flex-direction: row;
-                justify-content: space-between;
-                padding: 8px 12px;
-            }
+            .week-nav-bar { flex-direction: row; justify-content: space-between; padding: 8px 12px; }
             .week-btn-group { width: auto; }
         }
 
@@ -145,27 +158,11 @@
             border-bottom: 1px dashed var(--border);
         }
 
-        @media (min-width: 768px) {
-            .employee-header {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
-        }
+        @media (min-width: 768px) { .employee-header { flex-direction: row; justify-content: space-between; align-items: center; } }
 
-        .employee-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #9d174d;
-            cursor: pointer;
-            text-decoration: underline dashed rgba(157, 23, 77, 0.4);
-        }
+        .employee-name { font-size: 18px; font-weight: bold; color: #9d174d; cursor: pointer; text-decoration: underline dashed rgba(157, 23, 77, 0.4); }
 
-        .employee-stats {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
+        .employee-stats { display: flex; gap: 6px; flex-wrap: wrap; }
 
         .stat-badge {
             background: white;
@@ -181,227 +178,85 @@
         .stat-badge .overtime-pos { color: #10b981; }
         .stat-badge .overtime-neg { color: #ef4444; }
 
-        .grid-days {
-            display: grid;
-            grid-template-columns: repeat(1, 1fr);
-            gap: 10px;
-        }
-
+        .grid-days { display: grid; grid-template-columns: repeat(1, 1fr); gap: 10px; }
         @media (min-width: 480px) { .grid-days { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 768px) { .grid-days { grid-template-columns: repeat(4, 1fr); } }
         @media (min-width: 1024px) { .grid-days { grid-template-columns: repeat(7, 1fr); } }
 
-        .day-box {
-            background: white;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
+        .day-box { background: white; padding: 10px; border-radius: 8px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 6px; }
 
-        .day-label {
-            font-size: 12px;
-            font-weight: bold;
-            color: #db2777;
-            text-transform: uppercase;
-            border-bottom: 1px solid #fff1f2;
-            padding-bottom: 2px;
-        }
+        .day-label { font-size: 12px; font-weight: bold; color: #db2777; text-transform: uppercase; border-bottom: 1px solid #fff1f2; padding-bottom: 2px; }
 
-        .time-input {
-            width: 100%;
-            background: #fff5f5;
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 4px;
-            border-radius: 4px;
-            font-size: 12px;
-            height: 28px;
-        }
+        .time-input { width: 100%; background: #fff5f5; border: 1px solid var(--border); color: var(--text-main); padding: 4px; border-radius: 4px; font-size: 12px; height: 28px; }
+        .time-input:disabled, .input-deduct:disabled, .note-input:disabled { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
 
-        .deduct-container {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            color: #b91c1c;
-            font-weight: 600;
-        }
+        .deduct-container { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #b91c1c; font-weight: 600; }
 
-        .input-deduct {
-            width: 45px;
-            height: 24px;
-            padding: 2px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 11px;
-            text-align: center;
-            background: #fef2f2;
-            color: #b91c1c;
-        }
+        .input-deduct { width: 45px; height: 24px; padding: 2px; border: 1px solid var(--border); border-radius: 4px; font-size: 11px; text-align: center; background: #fef2f2; color: #b91c1c; }
 
-        .note-input {
-            width: 100%;
-            height: 40px;
-            resize: none;
-            font-size: 11px;
-            padding: 4px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            background: #fafafa;
-            color: var(--text-main);
-        }
-        .note-input:focus { background: white; outline: 1px solid var(--accent); }
+        .note-input { width: 100%; height: 40px; resize: none; font-size: 11px; padding: 4px; border: 1px solid var(--border); border-radius: 4px; background: #fafafa; color: var(--text-main); }
 
-        .off-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 11px;
-            color: var(--text-dim);
-            cursor: pointer;
-            user-select: none;
-            margin-top: 2px;
-        }
+        .off-checkbox { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-dim); cursor: pointer; user-select: none; margin-top: 2px; }
 
         .is-off { opacity: 0.4; background: #f3f4f6; }
 
-        .settings-panel {
-            display: none;
-            background: #fff1f2;
-            border: 2px solid var(--border);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 25px;
-        }
-
+        .settings-panel { display: none; background: #fff1f2; border: 2px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 25px; }
         .settings-group { margin-bottom: 15px; }
         .settings-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #9d174d; font-size: 14px;}
 
-        .input-text {
-            padding: 8px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            width: 100%;
-            max-width: 240px;
-            margin-bottom: 8px;
-            display: block;
-        }
+        .input-text { padding: 8px; border: 1px solid var(--border); border-radius: 6px; width: 100%; max-width: 240px; margin-bottom: 8px; display: block; }
 
-        .worker-list-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            margin-bottom: 5px;
-            border: 1px solid var(--border);
-            max-width: 300px;
-        }
+        .worker-list-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border: 1px solid var(--border); max-width: 450px; flex-wrap: wrap; gap: 6px; }
+        .pass-change-container { display: flex; gap: 4px; align-items: center; width: 100%; border-top: 1px dashed #fbcfe8; padding-top: 6px; margin-top: 4px; }
+        .input-mini-pass { padding: 4px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; width: 110px; }
 
-        .btn-danger { background: #ef4444; padding: 4px 8px; font-size: 11px; }
-        .btn-danger:hover { background: #dc2626; }
-
-        /* Modal Design Optimized for Mobile Screens */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-        }
-
-        .modal-content {
-            background: white;
-            padding: 16px;
-            border-radius: 16px;
-            width: 100%;
-            max-width: 440px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border: 1px solid var(--border);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            color: #9d174d;
-        }
-
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; padding: 10px; }
+        .modal-content { background: white; padding: 16px; border-radius: 16px; width: 100%; max-width: 440px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #9d174d; }
         .close-btn { font-size: 28px; font-weight: bold; color: var(--text-dim); cursor: pointer; }
 
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            text-align: center;
-        }
-
-        .calendar-day-header {
-            font-size: 10px;
-            font-weight: bold;
-            color: var(--accent);
-            padding: 4px 0;
-            text-transform: uppercase;
-        }
-
-        .calendar-cell {
-            background: #fff5f5;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            min-height: 48px;
-            padding: 2px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+        .calendar-day-header { font-size: 10px; font-weight: bold; color: var(--accent); padding: 4px 0; text-transform: uppercase; }
+        .calendar-cell { background: #fff5f5; border: 1px solid var(--border); border-radius: 6px; min-height: 48px; padding: 2px; display: flex; flex-direction: column; justify-content: space-between; }
         .cell-num { font-size: 10px; font-weight: bold; color: var(--text-dim); text-align: left; }
-
-        .cell-hrs {
-            font-size: 9px;
-            font-weight: 800;
-            color: #10b981;
-            text-align: center;
-            background: white;
-            border-radius: 4px;
-            padding: 1px 0;
-            border: 1px solid #fbcfe8;
-        }
-
+        .cell-hrs { font-size: 9px; font-weight: 800; color: #10b981; text-align: center; background: white; border-radius: 4px; padding: 1px 0; border: 1px solid #fbcfe8; }
         .cell-empty { background: transparent; border: none; }
         .save-indicator { font-size: 11px; color: #10b981; font-weight: bold; margin-left: 8px; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="dashboard">
+    <div id="login-container" class="login-screen">
+        <h2>🎀 Aura Board Games</h2>
+        <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 20px;">Schedule Login</p>
+        <div class="error-msg" id="login-error">Invalid Username or Passkey!</div>
+        
+        <div class="login-group">
+            <label>User Profile Name:</label>
+            <input type="text" id="login-username" class="login-input" placeholder="e.g. Anna, Christa...">
+        </div>
+        <div class="login-group">
+            <label>Passkey Access Code:</label>
+            <input type="password" id="login-passkey" class="login-input" placeholder="••••">
+        </div>
+        <button class="login-btn" onclick="attemptLogin()">Access Dashboard</button>
+    </div>
+
+    <div id="app-container" class="dashboard">
         <div class="header">
             <div>
-                <h1>🎀 Aura Board Games</h1>
-                <p style="margin: 2px 0 0 0; color: var(--text-dim); font-size: 13px;">Live Schedule Dashboard</p>
+                <h1 id="welcome-banner">🎀 Aura Board Games</h1>
+                <p id="user-role-label" style="margin: 2px 0 0 0; color: var(--text-dim); font-size: 13px;">Live Schedule Dashboard</p>
             </div>
             <div class="nav-controls">
                 <span id="save-status" class="save-indicator">✓ Auto-saved</span>
-                <button class="btn-settings" onclick="toggleSettings()">⚙️ Settings</button>
+                <button id="admin-settings-btn" class="btn-settings" onclick="toggleSettings()" style="display:none;">⚙️ Settings</button>
+                <button class="btn-logout" onclick="logoutUser()">👤 Switch User / Logout</button>
             </div>
         </div>
 
-        <!-- Hidden Settings Menu -->
         <div id="settings-panel" class="settings-panel">
-            <h2 style="color: #9d174d; margin-top: 0; font-size: 16px;">Settings</h2>
+            <h2 style="color: #9d174d; margin-top: 0; font-size: 16px;">Admin Settings Dashboard</h2>
             <hr style="border: none; border-top: 1px dashed var(--border); margin-bottom: 15px;">
             
             <div class="settings-group">
@@ -410,13 +265,14 @@
             </div>
 
             <div class="settings-group">
-                <label>Add Team Member:</label>
-                <input type="text" id="new-name-input" class="input-text" placeholder="Name...">
-                <button onclick="addEmployee()">Add Member</button>
+                <label>Add New Team Member Roster Profile:</label>
+                <input type="text" id="new-name-input" class="input-text" placeholder="Full Name...">
+                <input type="text" id="new-pass-input" class="input-text" placeholder="Assign Passkey Code...">
+                <button onclick="addEmployee()">Add Member Profile</button>
             </div>
 
             <div class="settings-group">
-                <label>Active Roster:</label>
+                <label>Manage Active Passkeys & Roster:</label>
                 <div id="settings-worker-list"></div>
             </div>
         </div>
@@ -436,7 +292,6 @@
         <div id="schedule-container"></div>
     </div>
 
-    <!-- Calendar Overview Pop-Up Modal -->
     <div id="calendar-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -449,27 +304,66 @@
     </div>
 
     <script>
+        // Set fallback Admin credential baseline securely if database hasn't compiled yet
+        let employeePasskeys = JSON.parse(localStorage.getItem('aura_creds')) || { "Anna": "0000", "Christa": "1234", "Mira": "5678" };
+        localStorage.setItem('aura_creds', JSON.stringify(employeePasskeys));
+
         let employees = JSON.parse(localStorage.getItem('aura_employees')) || ["Anna", "Christa", "Mira"];
         let minMonthlyHours = Number(localStorage.getItem('aura_min_hours')) || 120;
         
+        let currentUser = null;
+        let isAdmin = false;
+
         const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
         let currentMonday = getMonday(new Date());
 
         function getMonday(d) {
             d = new Date(d);
-            let day = d.getDay(),
-                diff = d.getDate() - day + (day == 0 ? -6 : 1); 
+            let day = d.getDay(), diff = d.getDate() - day + (day == 0 ? -6 : 1); 
             return new Date(d.setDate(diff));
         }
 
-        function formatDate(date) {
-            return date.toISOString().split('T')[0];
-        }
+        function formatDate(date) { return date.toISOString().split('T')[0]; }
 
         function updateWeekLabel() {
             const endOfWeek = new Date(currentMonday);
             endOfWeek.setDate(endOfWeek.getDate() + 6);
             document.getElementById('week-label').innerText = `📅 ${currentMonday.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} - ${endOfWeek.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}`;
+        }
+
+        function attemptLogin() {
+            const userIn = document.getElementById('login-username').value.trim();
+            const passIn = document.getElementById('login-passkey').value.trim();
+            const storedCreds = JSON.parse(localStorage.getItem('aura_creds'));
+
+            if (storedCreds[userIn] && storedCreds[userIn] === passIn) {
+                currentUser = userIn;
+                isAdmin = (userIn.toLowerCase() === "anna");
+                
+                document.getElementById('login-error').style.display = 'none';
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('app-container').style.display = 'block';
+                
+                document.getElementById('welcome-banner').innerText = `🎀 Welcome, ${currentUser}`;
+                document.getElementById('user-role-label').innerText = isAdmin ? "Administrator Dashboard Access" : "Staff Schedule Portal (Read-Only)";
+                document.getElementById('admin-settings-btn').style.display = isAdmin ? 'inline-flex' : 'none';
+
+                // Reset field strings inside login UI
+                document.getElementById('login-username').value = "";
+                document.getElementById('login-passkey').value = "";
+
+                renderSchedule();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            isAdmin = false;
+            document.getElementById('app-container').style.display = 'none';
+            document.getElementById('settings-panel').style.display = 'none';
+            document.getElementById('login-container').style.display = 'block';
         }
 
         function calculateHours(fromStr, toStr, isOff, breakMins) {
@@ -480,12 +374,7 @@
             if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000;
             
             let totalHours = diffMs / (1000 * 60 * 60);
-            
-            // Subtract extra break minutes converted into hours
-            if (breakMins && !isNaN(breakMins)) {
-                totalHours -= (Number(breakMins) / 60);
-            }
-            
+            if (breakMins && !isNaN(breakMins)) { totalHours -= (Number(breakMins) / 60); }
             return parseFloat(Math.max(0, totalHours).toFixed(2));
         }
 
@@ -533,10 +422,8 @@
         function openCalendarView(emp) {
             const modal = document.getElementById('calendar-modal');
             document.getElementById('modal-title').innerText = `📊 ${emp}'s History`;
-            
             const currentYear = currentMonday.getFullYear();
             const currentMonthIndex = currentMonday.getMonth();
-            
             const monthLabel = currentMonday.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
             document.getElementById('modal-month-name').innerText = `Month Breakdown: ${monthLabel}`;
 
@@ -553,7 +440,6 @@
 
             const firstDayOfMonth = new Date(currentYear, currentMonthIndex, 1);
             const lastDayOfMonth = new Date(currentYear, currentMonthIndex + 1, 0);
-            
             let startDayOffset = firstDayOfMonth.getDay() - 1;
             if (startDayOffset < 0) startDayOffset = 6;
 
@@ -567,35 +453,20 @@
             for (let dayNum = 1; dayNum <= totalDays; dayNum++) {
                 const evalDate = new Date(currentYear, currentMonthIndex, dayNum);
                 const dayHours = getHoursForExactDate(emp, evalDate);
-
                 const cell = document.createElement('div');
                 cell.className = 'calendar-cell';
-                
-                let hourTagHtml = '';
-                if (dayHours > 0) {
-                    hourTagHtml = `<div class="cell-hrs">${dayHours}h</div>`;
-                }
-
-                cell.innerHTML = `
-                    <div class="cell-num">${dayNum}</div>
-                    ${hourTagHtml}
-                `;
+                let hourTagHtml = dayHours > 0 ? `<div class="cell-hrs">${dayHours}h</div>` : '';
+                cell.innerHTML = `<div class="cell-num">${dayNum}</div>${hourTagHtml}`;
                 grid.appendChild(cell);
             }
-
             modal.style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('calendar-modal').style.display = 'none';
-        }
-
-        window.onclick = function(event) {
-            const modal = document.getElementById('calendar-modal');
-            if (event.target == modal) { modal.style.display = 'none'; }
-        }
+        function closeModal() { document.getElementById('calendar-modal').style.display = 'none'; }
+        window.onclick = function(event) { if (event.target == document.getElementById('calendar-modal')) { closeModal(); } }
 
         function saveStateAutomatically() {
+            if (!isAdmin) return; // Prevent any write access if staff triggers an input event bypass
             const currentWeekKey = `schedule_${formatDate(currentMonday)}`;
             const dataToSave = {};
             
@@ -621,7 +492,6 @@
             });
 
             localStorage.setItem(currentWeekKey, JSON.stringify(dataToSave));
-            
             const statusLabel = document.getElementById('save-status');
             statusLabel.style.display = 'inline';
             setTimeout(() => { statusLabel.style.display = 'none'; }, 800);
@@ -643,7 +513,6 @@
             
             const monthTotal = getMonthHours(emp);
             document.getElementById(`monthly_total_${emp}`).innerText = monthTotal.toFixed(1);
-            
             const extraTime = monthTotal - minMonthlyHours;
             const bankEl = document.getElementById(`bank_total_${emp}`);
             bankEl.innerText = (extraTime >= 0 ? '+' : '') + extraTime.toFixed(1);
@@ -700,21 +569,24 @@
                     dayBox.className = `day-box ${dayData.off ? 'is-off' : ''}`;
                     dayBox.id = `box_${dayKey}`;
 
+                    // Evaluate structural strings dynamically depending on admin check status
+                    const isDisabledAttr = !isAdmin ? 'disabled' : '';
+
                     dayBox.innerHTML = `
                         <div class="day-label">${day}</div>
-                        <input type="time" class="time-input" id="from_${dayKey}" value="${dayData.from}" ${dayData.off ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
-                        <input type="time" class="time-input" id="to_${dayKey}" value="${dayData.to}" ${dayData.off ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
+                        <input type="time" class="time-input" id="from_${dayKey}" value="${dayData.from}" ${dayData.off || !isAdmin ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
+                        <input type="time" class="time-input" id="to_${dayKey}" value="${dayData.to}" ${dayData.off || !isAdmin ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
                         
                         <div class="deduct-container">
                             <span>Break:</span>
-                            <input type="number" class="input-deduct" id="break_${dayKey}" value="${dayData.breakMins || 0}" min="0" step="5" ${dayData.off ? 'disabled' : ''} oninput="updateLiveHours('${emp}')">
+                            <input type="number" class="input-deduct" id="break_${dayKey}" value="${dayData.breakMins || 0}" min="0" step="5" ${dayData.off || !isAdmin ? 'disabled' : ''} oninput="updateLiveHours('${emp}')">
                             <span>min</span>
                         </div>
 
-                        <textarea class="note-input" id="note_${dayKey}" placeholder="Add note..." oninput="saveStateAutomatically()">${dayData.notes || ""}</textarea>
+                        <textarea class="note-input" id="note_${dayKey}" placeholder="No notes..." ${isDisabledAttr} oninput="saveStateAutomatically()">${dayData.notes || ""}</textarea>
 
                         <label class="off-checkbox">
-                            <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} onchange="toggleOff('${dayKey}', '${emp}')"> Day Off
+                            <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} ${isDisabledAttr} onchange="toggleOff('${dayKey}', '${emp}')"> Day Off
                         </label>
                     `;
                     grid.appendChild(dayBox);
@@ -728,6 +600,7 @@
         }
 
         function toggleOff(dayKey, emp) {
+            if (!isAdmin) return;
             const isChecked = document.getElementById(`off_${dayKey}`).checked;
             const dayBox = document.getElementById(`box_${dayKey}`);
             const fromInput = document.getElementById(`from_${dayKey}`);
@@ -736,14 +609,10 @@
 
             if (isChecked) {
                 dayBox.classList.add('is-off');
-                fromInput.disabled = true;
-                toInput.disabled = true;
-                breakInput.disabled = true;
+                fromInput.disabled = true; toInput.disabled = true; breakInput.disabled = true;
             } else {
                 dayBox.classList.remove('is-off');
-                fromInput.disabled = false;
-                toInput.disabled = false;
-                breakInput.disabled = false;
+                fromInput.disabled = false; toInput.disabled = false; breakInput.disabled = false;
             }
             updateLiveHours(emp);
         }
@@ -754,50 +623,97 @@
         }
 
         function toggleSettings() {
+            if (!isAdmin) return;
             const panel = document.getElementById('settings-panel');
             panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         }
 
         function updateMinHours(val) {
+            if (!isAdmin) return;
             minMonthlyHours = Number(val) || 0;
             localStorage.setItem('aura_min_hours', minMonthlyHours);
             renderSchedule();
         }
 
         function addEmployee() {
-            const input = document.getElementById('new-name-input');
-            const name = input.value.trim();
-            if (name && !employees.includes(name)) {
+            if (!isAdmin) return;
+            const nameInput = document.getElementById('new-name-input');
+            const passInput = document.getElementById('new-pass-input');
+            const name = nameInput.value.trim();
+            const pass = passInput.value.trim();
+
+            if (name && pass && !employees.includes(name)) {
                 employees.push(name);
                 localStorage.setItem('aura_employees', JSON.stringify(employees));
-                input.value = '';
+                
+                let creds = JSON.parse(localStorage.getItem('aura_creds'));
+                creds[name] = pass;
+                localStorage.setItem('aura_creds', JSON.stringify(creds));
+
+                nameInput.value = '';
+                passInput.value = '';
                 renderSchedule();
             }
         }
 
         function removeEmployee(name) {
+            if (!isAdmin) return;
+            if (name.toLowerCase() === 'anna') { alert("Cannot delete the system admin profile!"); return; }
             if (confirm(`Remove ${name} from the roster?`)) {
                 employees = employees.filter(e => e !== name);
                 localStorage.setItem('aura_employees', JSON.stringify(employees));
+                
+                let creds = JSON.parse(localStorage.getItem('aura_creds'));
+                delete creds[name];
+                localStorage.setItem('aura_creds', JSON.stringify(creds));
+                
                 renderSchedule();
             }
+        }
+
+        function changePasskeyInline(empName, newPassValue) {
+            if (!isAdmin) return;
+            if (!newPassValue.trim()) return;
+            let creds = JSON.parse(localStorage.getItem('aura_creds'));
+            creds[empName] = newPassValue.trim();
+            localStorage.setItem('aura_creds', JSON.stringify(creds));
+            
+            // Show smooth visual feedback confirmation
+            const statusLabel = document.getElementById('save-status');
+            statusLabel.innerText = `✓ Updated ${empName}'s passkey`;
+            statusLabel.style.display = 'inline';
+            setTimeout(() => { 
+                statusLabel.style.display = 'none'; 
+                statusLabel.innerText = "✓ Auto-saved";
+            }, 1500);
         }
 
         function renderSettingsWorkerList() {
             const listDiv = document.getElementById('settings-worker-list');
             listDiv.innerHTML = '';
+            const creds = JSON.parse(localStorage.getItem('aura_creds')) || {};
+
             employees.forEach(emp => {
                 const item = document.createElement('div');
                 item.className = 'worker-list-item';
+                
+                const currentPass = creds[emp] || "";
+                const deleteButtonHtml = emp.toLowerCase() !== 'anna' ? `<button class="btn-danger" onclick="removeEmployee('${emp}')">Delete</button>` : `<span style="font-size:11px; color:#db2777; font-weight:bold;">Primary Admin</span>`;
+
                 item.innerHTML = `
-                    <span>${emp}</span>
-                    <button class="btn-danger" onclick="removeEmployee('${emp}')">Delete</button>
+                    <div style="display:flex; justify-content:space-between; width:100%; font-weight:bold; color:#9d174d;">
+                        <span>👤 ${emp}</span>
+                        ${deleteButtonHtml}
+                    </div>
+                    <div class="pass-change-container">
+                        <span style="font-size:11px; color:var(--text-dim);">Passkey:</span>
+                        <input type="text" class="input-mini-pass" id="pass_edit_${emp}" value="${currentPass}" onchange="changePasskeyInline('${emp}', this.value)">
+                        <span style="font-size:9px; color:var(--text-dim); font-style:italic;">(Changes apply on click away)</span>
+                    </div>
                 `;
                 listDiv.appendChild(item);
             });
         }
-
-        renderSchedule();
     </script>
 </body>
 </html>
