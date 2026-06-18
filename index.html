@@ -30,6 +30,15 @@
             min-height: 100vh;
         }
 
+        /* Container wrappers to guarantee strict centering */
+        .center-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-grow: 1;
+        }
+
         /* Login Screen */
         .login-screen {
             width: 100%;
@@ -60,7 +69,6 @@
             padding: 16px;
             box-shadow: 0 10px 25px rgba(236, 72, 153, 0.15);
             border: 1px solid var(--border);
-            align-self: flex-start;
         }
 
         .header {
@@ -229,10 +237,11 @@
         .cell-empty { background: transparent; border: none; }
         .save-indicator { font-size: 11px; color: #10b981; font-weight: bold; margin-left: 8px; display: none; }
 
-        /* Footer */
+        /* Footer Alignment Fix */
         .app-footer {
-            margin-top: 30px;
-            margin-bottom: 10px;
+            margin-top: auto;
+            padding-top: 30px;
+            padding-bottom: 15px;
             font-size: 12px;
             color: var(--text-dim);
             text-align: center;
@@ -246,70 +255,72 @@
 </head>
 <body>
 
-    <div id="login-container" class="login-screen">
-        <h2>🎀 Aura Board Games</h2>
-        <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 20px;">Schedule Login</p>
-        <div class="error-msg" id="login-error">Invalid Passkey Code!</div>
-        
-        <div class="login-group">
-            <label>Select Your Profile:</label>
-            <select id="login-username" class="login-input"></select>
-        </div>
-        <div class="login-group">
-            <label>Passkey Access Code:</label>
-            <input type="password" id="login-passkey" class="login-input" placeholder="••••">
-        </div>
-        <button class="login-btn" onclick="attemptLogin()">Access Dashboard</button>
-    </div>
-
-    <div id="app-container" class="dashboard">
-        <div class="header">
-            <div>
-                <h1 id="welcome-banner">🎀 Welcome</h1>
-                <p id="user-role-label" style="margin: 2px 0 0 0; color: var(--text-dim); font-size: 13px;">Live Schedule Dashboard</p>
-            </div>
-            <div class="nav-controls">
-                <span id="save-status" class="save-indicator">✓ Auto-saved</span>
-                <button id="admin-settings-btn" class="btn-settings" onclick="toggleSettings()" style="display:none;">⚙️ Settings</button>
-                <button class="btn-logout" onclick="logoutUser()">👤 Switch User / Logout</button>
-            </div>
-        </div>
-
-        <div id="settings-panel" class="settings-panel">
-            <h2 style="color: #9d174d; margin-top: 0; font-size: 16px;">Admin Settings Dashboard</h2>
-            <hr style="border: none; border-top: 1px dashed var(--border); margin-bottom: 15px;">
+    <div class="center-wrapper">
+        <div id="login-container" class="login-screen">
+            <h2>🎀 Aura Board Games</h2>
+            <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 20px;">Schedule Login</p>
+            <div class="error-msg" id="login-error">Invalid Passkey Code!</div>
             
-            <div class="settings-group">
-                <label>Minimum Target Hours / Month:</label>
-                <input type="number" id="min-hours-input" class="input-text" value="120" onchange="updateMinHours(this.value)">
+            <div class="login-group">
+                <label>Select Your Profile:</label>
+                <select id="login-username" class="login-input"></select>
             </div>
-
-            <div class="settings-group">
-                <label>Add New Team Member Roster Profile:</label>
-                <input type="text" id="new-name-input" class="input-text" placeholder="Full Name...">
-                <input type="text" id="new-pass-input" class="input-text" placeholder="Assign Passkey Code...">
-                <button onclick="addEmployee()">Add Member Profile</button>
+            <div class="login-group">
+                <label>Passkey Access Code:</label>
+                <input type="password" id="login-passkey" class="login-input" placeholder="••••">
             </div>
-
-            <div class="settings-group">
-                <label>Manage Active Passkeys & Roster:</label>
-                <div id="settings-worker-list"></div>
-            </div>
+            <button class="login-btn" onclick="attemptLogin()">Access Dashboard</button>
         </div>
 
-        <div class="week-nav-bar">
-            <div class="week-btn-group">
-                <button onclick="changeWeek(-4)">⏮ Mo</button>
-                <button onclick="changeWeek(-1)">◀ Wk</button>
+        <div id="app-container" class="dashboard">
+            <div class="header">
+                <div>
+                    <h1 id="welcome-banner">🎀 Welcome</h1>
+                    <p id="user-role-label" style="margin: 2px 0 0 0; color: var(--text-dim); font-size: 13px;">Live Schedule Dashboard</p>
+                </div>
+                <div class="nav-controls">
+                    <span id="save-status" class="save-indicator">✓ Auto-saved</span>
+                    <button id="admin-settings-btn" class="btn-settings" onclick="toggleSettings()" style="display:none;">⚙️ Settings</button>
+                    <button class="btn-logout" onclick="logoutUser()">👤 Switch User / Logout</button>
+                </div>
             </div>
-            <div class="week-display" id="week-label">Loading week...</div>
-            <div class="week-btn-group">
-                <button onclick="changeWeek(1)">Wk ▶</button>
-                <button onclick="changeWeek(4)">Mo ⏭</button>
-            </div>
-        </div>
 
-        <div id="schedule-container"></div>
+            <div id="settings-panel" class="settings-panel">
+                <h2 style="color: #9d174d; margin-top: 0; font-size: 16px;">Admin Settings Dashboard</h2>
+                <hr style="border: none; border-top: 1px dashed var(--border); margin-bottom: 15px;">
+                
+                <div class="settings-group">
+                    <label>Minimum Target Hours / Month:</label>
+                    <input type="number" id="min-hours-input" class="input-text" value="120" onchange="updateMinHours(this.value)">
+                </div>
+
+                <div class="settings-group">
+                    <label>Add New Team Member Roster Profile:</label>
+                    <input type="text" id="new-name-input" class="input-text" placeholder="Full Name...">
+                    <input type="text" id="new-pass-input" class="input-text" placeholder="Assign Passkey Code...">
+                    <button onclick="addEmployee()">Add Member Profile</button>
+                </div>
+
+                <div class="settings-group">
+                    <label>Manage Active Passkeys & Roster:</label>
+                    <div id="settings-worker-list"></div>
+                </div>
+            </div>
+
+            <div class="week-nav-bar">
+                <div class="week-btn-group">
+                    <button onclick="changeWeek(-4)">⏮ Mo</button>
+                    <button onclick="changeWeek(-1)">◀ Wk</button>
+                </div>
+                <div class="week-display" id="week-label">Loading week...</div>
+                <div class="week-btn-group">
+                    <button onclick="changeWeek(1)">Wk ▶</button>
+                    <button onclick="changeWeek(4)">Mo ⏭</button>
+                </div>
+            </div>
+
+            <div id="schedule-container"></div>
+        </div>
     </div>
 
     <div id="calendar-modal" class="modal">
