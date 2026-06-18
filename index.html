@@ -27,7 +27,7 @@
 
         .dashboard {
             width: 100%;
-            max-width: 800px;
+            max-width: 950px;
             background: var(--card-bg);
             border-radius: 16px;
             padding: 24px;
@@ -44,7 +44,6 @@
         }
 
         h1 { margin: 0; font-size: 24px; color: var(--accent); }
-        h2 { margin: 0; font-size: 18px; color: var(--text-main); }
 
         .nav-controls {
             display: flex;
@@ -77,18 +76,43 @@
 
         .employee-row {
             background: #151f32;
-            padding: 15px;
+            padding: 20px;
             border-radius: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             border: 1px solid var(--border);
         }
 
+        .employee-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed var(--border);
+        }
+
         .employee-name {
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
-            margin-bottom: 12px;
             color: var(--accent);
-            text-align: left;
+        }
+
+        .employee-stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-badge {
+            background: #0f172a;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+        }
+
+        .stat-badge span {
+            color: var(--accent);
         }
 
         .grid-days {
@@ -97,8 +121,9 @@
             gap: 8px;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .grid-days { grid-template-columns: repeat(1, 1fr); }
+            .employee-header { flex-direction: column; align-items: flex-start; gap: 10px; }
         }
 
         .day-box {
@@ -138,9 +163,7 @@
             margin-top: 2px;
         }
 
-        .is-off {
-            opacity: 0.4;
-        }
+        .is-off { opacity: 0.3; }
     </style>
 </head>
 <body>
@@ -154,7 +177,6 @@
             <button class="btn-save" onclick="saveSchedule()">Save Schedule</button>
         </div>
 
-        <!-- History/Navigation Controls -->
         <div class="header" style="border: none; padding: 0; margin-bottom: 25px;">
             <div class="nav-controls">
                 <button onclick="changeWeek(-4)">⏮ Month</button>
@@ -167,13 +189,11 @@
             </div>
         </div>
 
-        <!-- Schedule Container -->
         <div id="schedule-container"></div>
     </div>
 
     <script>
-        // Edit this array to add/remove your context employees!
-        const employees = ["Sarah", "Alex", "John", "Maria", "Rayan"]; 
+        const employees = ["Anna", "Christa", "Mira"]; 
         const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
         
         let currentMonday = getMonday(new Date());
@@ -189,14 +209,59 @@
             return date.toISOString().split('T')[0];
         }
 
-        function getWeekKey() {
-            return `schedule_${formatDate(currentMonday)}`;
-        }
-
         function updateWeekLabel() {
             const endOfWeek = new Date(currentMonday);
             endOfWeek.setDate(endOfWeek.getDate() + 6);
             document.getElementById('week-label').innerText = `📅 ${currentMonday.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} - ${endOfWeek.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}`;
+        }
+
+        function calculateHours(fromStr, toStr, isOff) {
+            if (isOff || !fromStr || !toStr) return 0;
+            const [fromH, fromM] = fromStr.split(':').map(Number);
+            const [toH, toM] = toStr.split(':').map(Number);
+            let diffMs = (new Date(2000, 0, 1, toH, toM)) - (new Date(2000, 0, 1, fromH, fromM));
+            if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000; // handles overnight shifts
+            return parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+        }
+
+        function getMonthHours(employeeName) {
+            let totalMonthHours = 0;
+            const targetMonth = currentMonday.getMonth();
+            const targetYear = currentMonday.getFullYear();
+
+            // Loop through all keys in localStorage to calculate totals for the active month
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith("schedule_")) {
+                    const dateStr = key.replace("schedule_", "");
+                    const keyDate = new Date(dateStr);
+                    
+                    if (keyDate.getMonth() === targetMonth && keyDate.getFullYear() === targetYear) {
+                        const savedData = JSON.parse(localStorage.getItem(key)) || {};
+                        days.forEach(day => {
+                            const dayKey = `${employeeName}_${day}`;
+                            const dayData = savedData[dayKey];
+                            if (dayData) {
+                                totalMonthHours += calculateHours(dayData.from, dayData.to, dayData.off);
+                            }
+                        });
+                    }
+                }
+            }
+            return totalMonthHours.toFixed(1);
+        }
+
+        function updateLiveHours(emp) {
+            let weeklyTotal = 0;
+            days.forEach(day => {
+                const dayKey = `${emp}_${day}`;
+                const offChecked = document.getElementById(`off_${dayKey}`).checked;
+                const fromVal = document.getElementById(`from_${dayKey}`).value;
+                const toVal = document.getElementById(`to_${dayKey}`).value;
+                weeklyTotal += calculateHours(fromVal, toVal, offChecked);
+            });
+
+            document.getElementById(`weekly_total_${emp}`).innerText = weeklyTotal.toFixed(1);
         }
 
         function renderSchedule() {
@@ -204,17 +269,32 @@
             const container = document.getElementById('schedule-container');
             container.innerHTML = '';
 
-            // Load saved data for this specific week key
-            const savedData = JSON.parse(localStorage.getItem(getWeekKey())) || {};
+            const currentWeekKey = `schedule_${formatDate(currentMonday)}`;
+            const savedData = JSON.parse(localStorage.getItem(currentWeekKey)) || {};
 
             employees.forEach(emp => {
                 const empRow = document.createElement('div');
                 empRow.className = 'employee-row';
                 
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'employee-name';
-                nameDiv.innerText = emp;
-                empRow.appendChild(nameDiv);
+                // Calculate weekly hours from saved data for structural base
+                let weeklyTotalInitial = 0;
+                days.forEach(day => {
+                    const dayKey = `${emp}_${day}`;
+                    const dayData = savedData[dayKey] || { from: "09:00", to: "17:00", off: false };
+                    weeklyTotalInitial += calculateHours(dayData.from, dayData.to, dayData.off);
+                });
+
+                const monthTotal = getMonthHours(emp);
+
+                empRow.innerHTML = `
+                    <div class="employee-header">
+                        <div class="employee-name">${emp}</div>
+                        <div class="employee-stats">
+                            <div class="stat-badge">Week Total: <span id="weekly_total_${emp}">${weeklyTotalInitial.toFixed(1)}</span> hrs</div>
+                            <div class="stat-badge">Month Total: <span>${monthTotal}</span> hrs</div>
+                        </div>
+                    </div>
+                `;
 
                 const grid = document.createElement('div');
                 grid.className = 'grid-days';
@@ -229,10 +309,10 @@
 
                     dayBox.innerHTML = `
                         <div class="day-label">${day}</div>
-                        <input type="time" class="time-input" id="from_${dayKey}" value="${dayData.from}" ${dayData.off ? 'disabled' : ''}>
-                        <input type="time" class="time-input" id="to_${dayKey}" value="${dayData.to}" ${dayData.off ? 'disabled' : ''}>
+                        <input type="time" class="time-input" id="from_${dayKey}" value="${dayData.from}" ${dayData.off ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
+                        <input type="time" class="time-input" id="to_${dayKey}" value="${dayData.to}" ${dayData.off ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
                         <label class="off-checkbox">
-                            <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} onchange="toggleOff('${dayKey}')"> Day Off
+                            <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} onchange="toggleOff('${dayKey}', '${emp}')"> Day Off
                         </label>
                     `;
                     grid.appendChild(dayBox);
@@ -243,7 +323,7 @@
             });
         }
 
-        function toggleOff(dayKey) {
+        function toggleOff(dayKey, emp) {
             const isChecked = document.getElementById(`off_${dayKey}`).checked;
             const dayBox = document.getElementById(`box_${dayKey}`);
             const fromInput = document.getElementById(`from_${dayKey}`);
@@ -258,10 +338,13 @@
                 fromInput.disabled = false;
                 toInput.disabled = false;
             }
+            updateLiveHours(emp);
         }
 
         function saveSchedule() {
+            const currentWeekKey = `schedule_${formatDate(currentMonday)}`;
             const dataToSave = {};
+            
             employees.forEach(emp => {
                 days.forEach(day => {
                     const dayKey = `${emp}_${day}`;
@@ -272,8 +355,10 @@
                     };
                 });
             });
-            localStorage.setItem(getWeekKey(), JSON.stringify(dataToSave));
-            alert("Schedule saved successfully for this week!");
+
+            localStorage.setItem(currentWeekKey, JSON.stringify(dataToSave));
+            alert("Schedule saved successfully!");
+            renderSchedule(); // Refresh numbers and calculate month updates
         }
 
         function changeWeek(weeks) {
@@ -281,7 +366,6 @@
             renderSchedule();
         }
 
-        // Initialize App
         renderSchedule();
     </script>
 </body>
