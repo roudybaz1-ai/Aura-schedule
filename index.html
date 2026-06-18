@@ -4,16 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aura Board Games | Secure Schedule Manager</title>
-
-    <link rel="apple-touch-icon" href="aura-logo.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="aura-logo.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="aura-logo.png">
-
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Aura Roster">
-
     <style>
         :root {
             --bg-dark: #fdf2f8;
@@ -40,7 +30,7 @@
             min-height: 100vh;
         }
 
-        /* Container wrappers to guarantee strict centering across viewport scales */
+        /* Container wrappers to guarantee strict centering */
         .center-wrapper {
             width: 100%;
             display: flex;
@@ -69,7 +59,7 @@
         .login-btn:hover { background: var(--accent-hover); }
         .error-msg { color: #ef4444; font-size: 13px; font-weight: bold; margin-bottom: 12px; display: none; }
 
-        /* Main Dashboard Layout */
+        /* Main Dashboard */
         .dashboard {
             display: none;
             width: 100%;
@@ -233,7 +223,7 @@
         .pass-change-container { display: flex; gap: 4px; align-items: center; width: 100%; border-top: 1px dashed #fbcfe8; padding-top: 6px; margin-top: 4px; }
         .input-mini-pass { padding: 4px; font-size: 11px; border: 1px solid var(--border); border-radius: 4px; width: 110px; }
 
-        /* Modal Layout */
+        /* Modal Styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); justify-content: center; align-items: center; padding: 10px; }
         .modal-content { background: white; padding: 16px; border-radius: 16px; width: 100%; max-width: 440px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #9d174d; }
@@ -247,7 +237,7 @@
         .cell-empty { background: transparent; border: none; }
         .save-indicator { font-size: 11px; color: #10b981; font-weight: bold; margin-left: 8px; display: none; }
 
-        /* Responsive Footer Styles */
+        /* Footer Alignment Fix */
         .app-footer {
             margin-top: auto;
             padding-top: 30px;
@@ -668,3 +658,105 @@
             });
 
             renderSettingsWorkerList();
+        }
+
+        function changeWeek(weeks) {
+            currentMonday.setDate(currentMonday.getDate() + (weeks * 7));
+            renderSchedule();
+        }
+
+        function toggleSettings() {
+            if (!isAdmin) return;
+            const panel = document.getElementById('settings-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateMinHours(val) {
+            if (!isAdmin) return;
+            minMonthlyHours = Number(val) || 0;
+            localStorage.setItem('aura_min_hours', minMonthlyHours);
+            renderSchedule();
+        }
+
+        function addEmployee() {
+            if (!isAdmin) return;
+            const nameInput = document.getElementById('new-name-input');
+            const passInput = document.getElementById('new-pass-input');
+            const name = nameInput.value.trim();
+            const pass = passInput.value.trim();
+
+            if (name && pass && !employees.includes(name)) {
+                employees.push(name);
+                localStorage.setItem('aura_employees', JSON.stringify(employees));
+                
+                let creds = JSON.parse(localStorage.getItem('aura_creds'));
+                creds[name] = pass;
+                localStorage.setItem('aura_creds', JSON.stringify(creds));
+
+                nameInput.value = '';
+                passInput.value = '';
+                renderSchedule();
+            }
+        }
+
+        function removeEmployee(name) {
+            if (!isAdmin) return;
+            if (name.toLowerCase() === 'anna') { alert("Cannot delete the system admin profile!"); return; }
+            if (confirm(`Remove ${name} from the roster?`)) {
+                employees = employees.filter(e => e !== name);
+                localStorage.setItem('aura_employees', JSON.stringify(employees));
+                
+                let creds = JSON.parse(localStorage.getItem('aura_creds'));
+                delete creds[name];
+                localStorage.setItem('aura_creds', JSON.stringify(creds));
+                
+                renderSchedule();
+            }
+        }
+
+        function changePasskeyInline(empName, newPassValue) {
+            if (!isAdmin) return;
+            if (!newPassValue.trim()) return;
+            let creds = JSON.parse(localStorage.getItem('aura_creds'));
+            creds[empName] = newPassValue.trim();
+            localStorage.setItem('aura_creds', JSON.stringify(creds));
+            
+            const statusLabel = document.getElementById('save-status');
+            statusLabel.innerText = `✓ Updated ${empName}'s passkey`;
+            statusLabel.style.display = 'inline';
+            setTimeout(() => { 
+                statusLabel.style.display = 'none'; 
+                statusLabel.innerText = "✓ Auto-saved";
+            }, 1500);
+        }
+
+        function renderSettingsWorkerList() {
+            const listDiv = document.getElementById('settings-worker-list');
+            listDiv.innerHTML = '';
+            const creds = JSON.parse(localStorage.getItem('aura_creds')) || {};
+
+            employees.forEach(emp => {
+                const item = document.createElement('div');
+                item.className = 'worker-list-item';
+                
+                const currentPass = creds[emp] || "";
+                const deleteButtonHtml = emp.toLowerCase() !== 'anna' ? `<button class="btn-danger" onclick="removeEmployee('${emp}')">Delete</button>` : `<span style="font-size:11px; color:#db2777; font-weight:bold;">Primary Admin</span>`;
+
+                item.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; width:100%; font-weight:bold; color:#9d174d;">
+                        <span>👤 ${emp}</span>
+                        ${deleteButtonHtml}
+                    </div>
+                    <div class="pass-change-container">
+                        <span style="font-size:11px; color:var(--text-dim);">Passkey:</span>
+                        <input type="text" class="input-mini-pass" id="pass_edit_${emp}" value="${currentPass}" onchange="changePasskeyInline('${emp}', this.value)">
+                    </div>
+                `;
+                listDiv.appendChild(item);
+            });
+        }
+
+        populateLoginDropdown();
+    </script>
+</body>
+</html>
