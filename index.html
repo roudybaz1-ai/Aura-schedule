@@ -44,7 +44,7 @@
         .login-screen h2 { margin-top: 0; color: var(--accent); }
         .login-group { margin-bottom: 16px; text-align: left; }
         .login-group label { display: block; font-weight: 600; margin-bottom: 6px; color: #9d174d; font-size: 14px; }
-        .login-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
+        .login-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; background: white; color: var(--text-main); }
         .login-btn { width: 100%; padding: 10px; background: var(--accent); border: none; color: white; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 14px; transition: background 0.2s; }
         .login-btn:hover { background: var(--accent-hover); }
         .error-msg { color: #ef4444; font-size: 13px; font-weight: bold; margin-bottom: 12px; display: none; }
@@ -229,11 +229,11 @@
     <div id="login-container" class="login-screen">
         <h2>🎀 Aura Board Games</h2>
         <p style="color: var(--text-dim); font-size: 13px; margin-bottom: 20px;">Schedule Login</p>
-        <div class="error-msg" id="login-error">Invalid Username or Passkey!</div>
+        <div class="error-msg" id="login-error">Invalid Passkey Code!</div>
         
         <div class="login-group">
-            <label>User Profile Name:</label>
-            <input type="text" id="login-username" class="login-input" placeholder="e.g. Anna, Christa...">
+            <label>Select Your Profile:</label>
+            <select id="login-username" class="login-input"></select>
         </div>
         <div class="login-group">
             <label>Passkey Access Code:</label>
@@ -245,7 +245,7 @@
     <div id="app-container" class="dashboard">
         <div class="header">
             <div>
-                <h1 id="welcome-banner">🎀 Aura Board Games</h1>
+                <h1 id="welcome-banner">🎀 Welcome</h1>
                 <p id="user-role-label" style="margin: 2px 0 0 0; color: var(--text-dim); font-size: 13px;">Live Schedule Dashboard</p>
             </div>
             <div class="nav-controls">
@@ -304,7 +304,6 @@
     </div>
 
     <script>
-        // Set fallback Admin credential baseline securely if database hasn't compiled yet
         let employeePasskeys = JSON.parse(localStorage.getItem('aura_creds')) || { "Anna": "0000", "Christa": "1234", "Mira": "5678" };
         localStorage.setItem('aura_creds', JSON.stringify(employeePasskeys));
 
@@ -331,8 +330,19 @@
             document.getElementById('week-label').innerText = `📅 ${currentMonday.toLocaleDateString(undefined, {month: 'short', day: 'numeric'})} - ${endOfWeek.toLocaleDateString(undefined, {month: 'short', day: 'numeric', year: 'numeric'})}`;
         }
 
+        function populateLoginDropdown() {
+            const selectEl = document.getElementById('login-username');
+            selectEl.innerHTML = '';
+            employees.forEach(emp => {
+                const opt = document.createElement('option');
+                opt.value = emp;
+                opt.innerText = emp;
+                selectEl.appendChild(opt);
+            });
+        }
+
         function attemptLogin() {
-            const userIn = document.getElementById('login-username').value.trim();
+            const userIn = document.getElementById('login-username').value;
             const passIn = document.getElementById('login-passkey').value.trim();
             const storedCreds = JSON.parse(localStorage.getItem('aura_creds'));
 
@@ -345,11 +355,9 @@
                 document.getElementById('app-container').style.display = 'block';
                 
                 document.getElementById('welcome-banner').innerText = `🎀 Welcome, ${currentUser}`;
-                document.getElementById('user-role-label').innerText = isAdmin ? "Administrator Dashboard Access" : "Staff Schedule Portal (Read-Only)";
+                document.getElementById('user-role-label').innerText = isAdmin ? "Administrator Dashboard Access" : "Staff Schedule Portal (Personal View Only)";
                 document.getElementById('admin-settings-btn').style.display = isAdmin ? 'inline-flex' : 'none';
 
-                // Reset field strings inside login UI
-                document.getElementById('login-username').value = "";
                 document.getElementById('login-passkey').value = "";
 
                 renderSchedule();
@@ -364,6 +372,7 @@
             document.getElementById('app-container').style.display = 'none';
             document.getElementById('settings-panel').style.display = 'none';
             document.getElementById('login-container').style.display = 'block';
+            populateLoginDropdown();
         }
 
         function calculateHours(fromStr, toStr, isOff, breakMins) {
@@ -466,9 +475,9 @@
         window.onclick = function(event) { if (event.target == document.getElementById('calendar-modal')) { closeModal(); } }
 
         function saveStateAutomatically() {
-            if (!isAdmin) return; // Prevent any write access if staff triggers an input event bypass
+            if (!isAdmin) return; 
             const currentWeekKey = `schedule_${formatDate(currentMonday)}`;
-            const dataToSave = {};
+            const dataToSave = JSON.parse(localStorage.getItem(currentWeekKey)) || {};
             
             employees.forEach(emp => {
                 days.forEach(day => {
@@ -529,6 +538,9 @@
             const savedData = JSON.parse(localStorage.getItem(currentWeekKey)) || {};
 
             employees.forEach(emp => {
+                // PRIVACY FILTER: If not admin, completely skip rendering other people's data rows
+                if (!isAdmin && emp !== currentUser) return;
+
                 const empRow = document.createElement('div');
                 empRow.className = 'employee-row';
                 
@@ -569,9 +581,6 @@
                     dayBox.className = `day-box ${dayData.off ? 'is-off' : ''}`;
                     dayBox.id = `box_${dayKey}`;
 
-                    // Evaluate structural strings dynamically depending on admin check status
-                    const isDisabledAttr = !isAdmin ? 'disabled' : '';
-
                     dayBox.innerHTML = `
                         <div class="day-label">${day}</div>
                         <input type="time" class="time-input" id="from_${dayKey}" value="${dayData.from}" ${dayData.off || !isAdmin ? 'disabled' : ''} onchange="updateLiveHours('${emp}')">
@@ -583,10 +592,10 @@
                             <span>min</span>
                         </div>
 
-                        <textarea class="note-input" id="note_${dayKey}" placeholder="No notes..." ${isDisabledAttr} oninput="saveStateAutomatically()">${dayData.notes || ""}</textarea>
+                        <textarea class="note-input" id="note_${dayKey}" placeholder="No notes..." ${!isAdmin ? 'disabled' : ''} oninput="saveStateAutomatically()">${dayData.notes || ""}</textarea>
 
                         <label class="off-checkbox">
-                            <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} ${isDisabledAttr} onchange="toggleOff('${dayKey}', '${emp}')"> Day Off
+                            <input type="checkbox" id="off_${dayKey}" ${dayData.off ? 'checked' : ''} ${!isAdmin ? 'disabled' : ''} onchange="toggleOff('${dayKey}', '${emp}')"> Day Off
                         </label>
                     `;
                     grid.appendChild(dayBox);
@@ -678,7 +687,6 @@
             creds[empName] = newPassValue.trim();
             localStorage.setItem('aura_creds', JSON.stringify(creds));
             
-            // Show smooth visual feedback confirmation
             const statusLabel = document.getElementById('save-status');
             statusLabel.innerText = `✓ Updated ${empName}'s passkey`;
             statusLabel.style.display = 'inline';
@@ -708,12 +716,13 @@
                     <div class="pass-change-container">
                         <span style="font-size:11px; color:var(--text-dim);">Passkey:</span>
                         <input type="text" class="input-mini-pass" id="pass_edit_${emp}" value="${currentPass}" onchange="changePasskeyInline('${emp}', this.value)">
-                        <span style="font-size:9px; color:var(--text-dim); font-style:italic;">(Changes apply on click away)</span>
                     </div>
                 `;
                 listDiv.appendChild(item);
             });
         }
+
+        populateLoginDropdown();
     </script>
 </body>
 </html>
